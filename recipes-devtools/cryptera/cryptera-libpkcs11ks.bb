@@ -23,6 +23,8 @@ SRCREV_pkcs11    = "f3481918a208bd212aa995a41f92d786eb418a7d"
 SRC_URI += "git://go.googlesource.com/crypto;name=crypto;protocol=https;nobranch=1;destsuffix=vendor/src/golang.org/x/crypto"
 SRCREV_crypto    = "adef4cc1a8c2ca4da1b1f4e6c976b59ca22dbfb8"
 
+SRC_URI += "file://engine.conf"
+
 # This is annoying. The pkcs11mod repo does not contain a go.mod or
 # go.sum file. It contains instructions to generate those on-the-fly
 # with "go mod init". But that doesn't work in bitbake context: First,
@@ -38,6 +40,9 @@ SRCREV_FORMAT = "ks_pkcs11mod_pkcs11_crypto"
 inherit go
 
 export GO111MODULE = "off"
+
+PKCS11_MODULE_PATH = "${libdir}/engines-3/pkcs11.so"
+CRYPTERA_PKCS11_MODULE_PATH = "${libdir}/pkcs11/libpkcs11keyserver.so"
 
 do_compile() {
     # arrange for some of the golang built ins to be found
@@ -68,6 +73,12 @@ do_compile() {
 do_install:append() {
     install -d "${D}${libdir}/pkcs11"
     install -m 0755 libpkcs11keyserver.so "${D}${libdir}/pkcs11"
+    install -d ${D}${sysconfdir}/cryptera
+    install -m 0644 ${UNPACKDIR}/engine.conf ${D}${sysconfdir}/cryptera/
+
+    sed -i -e "s|@@PKCS11_MODULE_PATH@@|${PKCS11_MODULE_PATH}|" \
+           -e "s|@@CRYPTERA_PKCS11_MODULE_PATH@@|${CRYPTERA_PKCS11_MODULE_PATH}|" \
+              ${D}${sysconfdir}/cryptera/engine.conf
 }
 
 FILES:${PN} += "${libdir}"
