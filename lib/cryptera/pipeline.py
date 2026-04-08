@@ -78,7 +78,7 @@ def collect_key_usage(cpdir, tasks):
         with open(fn) as f:
             pntk = json.load(f)
         for t in pntk:
-            if not t in tasks:
+            if t not in tasks:
                 continue
             tk = pntk[t]
             task_keys[t] = tk
