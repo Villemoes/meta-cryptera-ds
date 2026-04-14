@@ -1,6 +1,6 @@
 SUMMARY = "Shared library exposing a pkcs#11 interface to Cryptera's key servers"
 
-LICENSE = "Proprietary"
+LICENSE = "Cryptera"
 LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE.md;md5=f30fb6c072a73bf2916acf24ecfcd9a6"
 
 GO_IMPORT = "github.com/cryptera-device-security/libpkcs11ks"
