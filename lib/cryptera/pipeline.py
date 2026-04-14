@@ -67,9 +67,9 @@ def get_details(d, expected_status=200):
     with open(d.getVar("CRYPTERA_PIPELINE_ENV_JSON")) as f:
         env = json.load(f)
 
-    server = env["KSC_API_SERVER"]
-    operation_id = env["KSC_OPERATION_ID"]
-    id_token = env["KSC_ID_TOKEN"]
+    server = env["CRYPTERA_KEYSERVER"]
+    operation_id = env["CRYPTERA_OPERATION_ID"]
+    id_token = env["CRYPTERA_ID_TOKEN"]
 
     url = f"{server}/api/operations/{operation_id}"
 
@@ -175,15 +175,17 @@ def setup(evt, d):
     # anyway.
     origenv = d.getVar("BB_ORIGENV")
 
-    # If we already have a KSC_ID_TOKEN (e.g. passed via the
+    # If we already have a CRYPTERA_ID_TOKEN (e.g. passed via the
     # environment), use that. Otherwise, assume we can obtain a token
-    # via KSC_ID_USER/KSC_ID_PASSWORD
-    id_token = origenv.getVar("KSC_ID_TOKEN") or ''
+    # via CRYPTERA_ID_USER/CRYPTERA_ID_PASSWORD.
+    #
+    # For backward compatibility, also look for variables named KSC_*.
+    id_token = origenv.getVar("CRYPTERA_ID_TOKEN") or origenv.getVar("KSC_ID_TOKEN") or ''
     if not id_token:
-        id_user = origenv.getVar("KSC_ID_USER") or ''
-        id_passwd = origenv.getVar("KSC_ID_PASSWD") or ''
+        id_user   = origenv.getVar("CRYPTERA_ID_USER")   or origenv.getVar("KSC_ID_USER")   or ''
+        id_passwd = origenv.getVar("CRYPTERA_ID_PASSWD") or origenv.getVar("KSC_ID_PASSWD") or ''
         if not id_user or not id_passwd:
-            bb.fatal("Neither KSC_ID_TOKEN or KSC_ID_USER/KSC_ID_PASSWD present in environment")
+            bb.fatal("Neither CRYPTERA_ID_TOKEN or CRYPTERA_ID_USER/CRYPTERA_ID_PASSWD present in environment")
         url = d.getVar("CRYPTERA_AUTHSERVER") + "/oauth2/token"
 
         resp = request('POST', url, auth=(id_user, id_passwd), data={"grant_type": "client_credentials"})
@@ -204,6 +206,9 @@ def setup(evt, d):
     operation_id = resp.json()["id"]
 
     env = {
+        "CRYPTERA_KEYSERVER":        d.getVar("CRYPTERA_KEYSERVER"),
+        "CRYPTERA_OPERATION_ID":     operation_id,
+        "CRYPTERA_ID_TOKEN":         id_token,
         "KSC_OPERATION_DESCRIPTION": d.getVar("CRYPTERA_PIPELINE_DESCRIPTION"),
         "KSC_API_SERVER":            d.getVar("CRYPTERA_KEYSERVER"),
         "KSC_OPERATION_ID":          operation_id,
