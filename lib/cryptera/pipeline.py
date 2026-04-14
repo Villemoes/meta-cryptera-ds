@@ -6,6 +6,12 @@ import requests
 import shlex
 import time
 
+def private_umask(func):
+    def inner(*args, **kwargs):
+        with bb.utils.umask(0o077):
+            func(*args, **kwargs)
+    return inner
+
 # Simple wrapper for requests.request, handling some common things
 # like automatically adding appropriate Accept: and/or Authorization:
 # headers.
@@ -94,6 +100,7 @@ def collect_key_usage(cpdir, tasks):
 # recipes are parsed. Creates up a clean directory for collecting
 # various info from recipes.
 
+@private_umask
 def prepare(evt, d):
     cpdir = d.getVar("CRYPTERA_PIPELINE_DIR")
 
@@ -118,6 +125,7 @@ def prepare(evt, d):
 # won't be, if bitbake sees there's no reason to), we'll still request
 # those keys as part of the pipeline.
 
+@private_umask
 def setup(evt, d):
     cpdir = d.getVar("CRYPTERA_PIPELINE_DIR")
 
