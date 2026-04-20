@@ -9,31 +9,21 @@ GO_IMPORT = "github.com/cryptera-device-security/libpkcs11ks"
 GO_SRCURI_DESTSUFFIX ??= "${@os.path.join(os.path.basename(d.getVar('S')), 'src', d.getVar('GO_IMPORT')) + '/'}"
 
 SRC_URI = "git://${GO_IMPORT};name=ks;protocol=https;branch=main;destsuffix=${GO_SRCURI_DESTSUFFIX}"
-SRCREV_ks        = "6609bfa6999ba1426aae0901aa9d88b9b27b6d8d"
+SRCREV_ks        = "950de36387690f1d3d5373c9ee70f07e8c12a692"
 
-#       github.com/namecoin/pkcs11mod v[something not officially tagged...]
-SRC_URI += "git://github.com/namecoin/pkcs11mod;protocol=https;name=pkcs11mod;branch=master;destsuffix=vendor/src/github.com/namecoin/pkcs11mod"
-SRCREV_pkcs11mod = "8389aedc2a5fdcd871f23dc40a8816e65368d92f"
+#       github.com/cryptera-device-security/pkcs11mod v1.0.1
+SRC_URI += "git://github.com/cryptera-device-security/pkcs11mod;protocol=https;name=pkcs11mod;branch=master;destsuffix=vendor/src/github.com/cryptera-device-security/pkcs11mod"
+SRCREV_pkcs11mod = "a0c56ed174ae4138b4b060a01029c5acdeea2750"
 
 #       github.com/miekg/pkcs11 v1.1.1
 SRC_URI += "git://github.com/miekg/pkcs11;name=pkcs11;protocol=https;nobranch=1;destsuffix=vendor/src/github.com/miekg/pkcs11"
 SRCREV_pkcs11    = "f3481918a208bd212aa995a41f92d786eb418a7d"
 
-#       golang.org/x/crypto v0.28.0
+#       golang.org/x/crypto v0.50.0
 SRC_URI += "git://go.googlesource.com/crypto;name=crypto;protocol=https;nobranch=1;destsuffix=vendor/src/golang.org/x/crypto"
-SRCREV_crypto    = "adef4cc1a8c2ca4da1b1f4e6c976b59ca22dbfb8"
+SRCREV_crypto    = "03ca0dcccbd37ba6be80adf74dde8d78a4d72817"
 
 SRC_URI += "file://engine.conf"
-
-# This is annoying. The pkcs11mod repo does not contain a go.mod or
-# go.sum file. It contains instructions to generate those on-the-fly
-# with "go mod init". But that doesn't work in bitbake context: First,
-# it means we haven't pinned the dependencies completely. Second, it
-# requires network access.
-#
-# So those files have been stashed and included them with this recipe.
-SRC_URI += "file://github.com/namecoin/pkcs11mod/go.mod;subdir=vendor/src"
-SRC_URI += "file://github.com/namecoin/pkcs11mod/go.sum;subdir=vendor/src"
 
 SRCREV_FORMAT = "ks_pkcs11mod_pkcs11_crypto"
 
@@ -60,7 +50,7 @@ do_compile() {
     # item, and we have to set it so that it ends up picking up the
     # header files from the miekg/pkcs11 module.
     export GOPATH="${WORKDIR}/build/vendor"
-    cd "${UNPACKDIR}/vendor/src/github.com/namecoin/pkcs11mod"
+    cd "${UNPACKDIR}/vendor/src/github.com/cryptera-device-security/pkcs11mod"
     go generate ./...
     )
 
