@@ -49,8 +49,14 @@ CRYPTERA_PIPELINE_ENV_JSON = "${CRYPTERA_PIPELINE_DIR}/pipeline-env.json"
 # an indication that the task may proceed to the actual signing.
 CRYPTERA_PIPELINE_APPROVED = "${CRYPTERA_PIPELINE_DIR}/pipeline-approved.txt"
 
+addhandler cryptera_prepare_pipeline
+cryptera_prepare_pipeline[eventmask] = "bb.event.ParseStarted"
+python cryptera_prepare_pipeline() {
+    cryptera.pipeline.prepare(e, d)
+}
+
 addhandler cryptera_setup_pipeline
-cryptera_setup_pipeline[eventmask] = "bb.event.ParseStarted bb.event.DepTreeGenerated"
+cryptera_setup_pipeline[eventmask] = "bb.event.DepTreeGenerated"
 python cryptera_setup_pipeline() {
     cryptera.pipeline.setup(e, d)
 }

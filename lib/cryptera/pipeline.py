@@ -90,6 +90,19 @@ def collect_key_usage(cpdir, tasks):
 
     return key_usage, task_keys
 
+# prepare(evt, d): Called from global context, before individual
+# recipes are parsed. Creates up a clean directory for collecting
+# various info from recipes.
+
+def prepare(evt, d):
+    cpdir = d.getVar("CRYPTERA_PIPELINE_DIR")
+
+    assert isinstance(evt, bb.event.ParseStarted)
+
+    bb.note("Wiping directory '%s'" % cpdir)
+    bb.utils.remove(cpdir, True)
+    bb.utils.mkdirhier(cpdir)
+
 # setup(evt, d): Called from global context, after all
 # recipes have been parsed and all dependencies worked out.
 #
@@ -107,12 +120,6 @@ def collect_key_usage(cpdir, tasks):
 
 def setup(evt, d):
     cpdir = d.getVar("CRYPTERA_PIPELINE_DIR")
-
-    if isinstance(evt, bb.event.ParseStarted):
-        bb.note("Wiping directory '%s'" % cpdir)
-        bb.utils.remove(cpdir, True)
-        bb.utils.mkdirhier(cpdir)
-        return
 
     assert isinstance(evt, bb.event.DepTreeGenerated)
 
