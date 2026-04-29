@@ -56,10 +56,12 @@ python() {
     # fine for this, with that small caveat.]
 
     for t in d.getVar("CRYPTERA_SIGNING_TASKS").split():
-        d.setVarFlag(t, "network", "1")
-        prefuncs = (d.getVarFlag(t, "prefuncs") or "").split()
-        prefuncs.insert(0, "cryptera_wait_for_approval")
-        d.setVarFlag(t, "prefuncs", " ".join(prefuncs))
+        keys = d.getVarFlag(t, "cryptera-keys") or ""
+        if cryptera.pipeline.filter_server_key_ids(keys):
+            d.setVarFlag(t, "network", "1")
+            prefuncs = (d.getVarFlag(t, "prefuncs") or "").split()
+            prefuncs.insert(0, "cryptera_wait_for_approval")
+            d.setVarFlag(t, "prefuncs", " ".join(prefuncs))
 }
 
 python cryptera_wait_for_approval() {
