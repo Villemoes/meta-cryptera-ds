@@ -209,6 +209,24 @@ def setup(evt, d):
     # any building. It's simply a matter of adding a (conditional)
     # call to wait_for_approval() here.
 
+# Split the string at whitespace, ignore any words starting with /
+# (representing absolute paths to files), return a list of the
+# remaining words with any "pkcs11:object=" prefix removed.
+#
+# This allows maximal flexibility in how one refers to the keys to use
+# for signing, and one should in most cases be able to just put
+# FOO_SIGNING_KEY into the do_bar[cryptera-keys] variable.
+def filter_server_key_ids(s):
+    kids = []
+    for k in s.split():
+        if k.startswith("/"):
+            bb.debug(1, "Ignoring key identifier '%s'" % k)
+            continue
+        if k.startswith("pkcs11:object="):
+            kids.append(k[14:])
+        else:
+            kids.append(k)
+    return kids
 
 # emit_key_usage(d): Hook called after the recipe metadata is
 # completely finalized, via the bb.event.RecipeParsed event.
@@ -269,16 +287,8 @@ def emit_key_usage(evt, d):
 
     for t in tasks:
         tk = {}
-        keys = (d.getVarFlag(t, "cryptera-keys") or "").split()
-        for k in keys:
-            if not k.startswith("pkcs11:object="):
-                if k.startswith("/"):
-                    bb.debug(1, "Ignoring key identifier '%s'" % k)
-                else:
-                    bb.warn("Key identifier '%s' is neither an absolute path nor a recognized pkcs11: URI, ignoring" % k)
-                continue
-
-            kid = k[14:]
+        keys = (d.getVarFlag(t, "cryptera-keys") or "")
+        for kid in filter_server_key_ids(keys):
             if kid not in tk:
                 tk[kid] = count
             else:
