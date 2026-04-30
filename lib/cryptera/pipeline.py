@@ -31,7 +31,7 @@ def check_response(resp, what, expected_status=200):
     if isinstance(expected_status, int):
         expected_status = [expected_status]
     if resp.status_code not in expected_status:
-        msg = f"{what} failed: HTTP status {resp.status_code}\n"
+        msg = f"{what} failed: HTTP status {resp.status_code}, expected one of {expected_status}\n"
         msg += f"Request: {resp.request.method} {resp.request.url}\n"
         msg += f"Request headers: {resp.request.headers}\n"
         msg += f"Request body: {resp.request.body}\n"
