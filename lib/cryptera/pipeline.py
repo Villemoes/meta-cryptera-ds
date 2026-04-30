@@ -63,7 +63,7 @@ def write_details_file(d, name, details):
     except FileExistsError:
         pass
 
-def get_details(d):
+def get_details(d, expected_status=200):
     with open(d.getVar("CRYPTERA_PIPELINE_ENV_JSON")) as f:
         env = json.load(f)
 
@@ -74,7 +74,7 @@ def get_details(d):
     url = f"{server}/api/operations/{operation_id}"
 
     resp = request('GET', url, id_token)
-    check_response(resp, "Checking pipeline details")
+    check_response(resp, "Checking pipeline details", expected_status=expected_status)
 
     return resp.json()
 
@@ -367,3 +367,16 @@ def shutdown(evt, d):
 
     details = get_details(d)
     write_details_file(d, "final", details)
+
+    server = env["KSC_API_SERVER"]
+    operation_id = env["KSC_OPERATION_ID"]
+    id_token = env["KSC_ID_TOKEN"]
+
+    url = f"{server}/api/operations/{operation_id}"
+
+    resp = request('DELETE', url, id_token)
+    if resp.status_code == 200:
+        details = get_details(d, expected_status = [200, 410])
+        write_details_file(d, "cancelled", details)
+    else:
+        bb.verbnote("Unable to cancel pipeline")
