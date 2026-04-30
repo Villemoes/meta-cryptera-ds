@@ -52,10 +52,18 @@ def emit_approval_file(d, reason):
     with open(d.getVar("CRYPTERA_PIPELINE_APPROVED"), "a") as f:
         print(reason, file=f)
 
-def check_approval(d):
-    if os.path.exists(d.getVar("CRYPTERA_PIPELINE_APPROVED")):
-        return True
+def write_details_file(d, name, details):
+    cpdir = d.getVar("CRYPTERA_PIPELINE_DIR")
+    detailsdir = os.path.join(cpdir, "details")
 
+    bb.utils.mkdirhier(detailsdir)
+    try:
+        with open(os.path.join(detailsdir, name + ".json"), "x") as f:
+            print(json.dumps(details, sort_keys=True, indent=4), file=f)
+    except FileExistsError:
+        pass
+
+def get_details(d):
     with open(d.getVar("CRYPTERA_PIPELINE_ENV_JSON")) as f:
         env = json.load(f)
 
@@ -66,9 +74,20 @@ def check_approval(d):
     url = f"{server}/api/operations/{operation_id}"
 
     resp = request('GET', url, id_token)
-    check_response(resp, "Checking pipeline status")
+    check_response(resp, "Checking pipeline details")
 
-    return resp.json()["approved"]
+    return resp.json()
+
+def check_approval(d):
+    if os.path.exists(d.getVar("CRYPTERA_PIPELINE_APPROVED")):
+        return True
+
+    details = get_details(d)
+    if details.get("approved"):
+        write_details_file(d, "approved", details)
+        return True
+    else:
+        return False
 
 def collect_key_usage(cpdir, tasks):
     # key_usage is what keeps the key -> usage count.
@@ -192,7 +211,10 @@ def setup(evt, d):
     }
     emit_env_files(d, env)
 
-    if check_approval(d):
+    details = get_details(d)
+    write_details_file(d, "initial", details)
+
+    if details.get("approved"):
         bb.note("Pipeline %s created, none of the keys required approval" % operation_id)
         emit_approval_file(d, "None of the keys required approval")
         return
@@ -332,3 +354,16 @@ def wait_for_approval(d, timeout=None, interval=None):
         time.sleep(interval)
 
     bb.fatal("Pipeline not approved within %d seconds" % timeout)
+
+def shutdown(evt, d):
+    assert isinstance(evt, bb.event.BuildCompleted)
+
+    with open(d.getVar("CRYPTERA_PIPELINE_ENV_JSON")) as f:
+        env = json.load(f)
+
+    if "KSC_OPERATION_ID" not in env:
+        # No pipeline created.
+        return
+
+    details = get_details(d)
+    write_details_file(d, "final", details)

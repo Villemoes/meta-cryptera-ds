@@ -60,3 +60,9 @@ cryptera_setup_pipeline[eventmask] = "bb.event.DepTreeGenerated"
 python cryptera_setup_pipeline() {
     cryptera.pipeline.setup(e, d)
 }
+
+addhandler cryptera_shutdown_pipeline
+cryptera_shutdown_pipeline[eventmask] = "bb.event.BuildCompleted"
+python cryptera_shutdown_pipeline() {
+    cryptera.pipeline.shutdown(e, d)
+}
