@@ -5,9 +5,6 @@ LIC_FILES_CHKSUM = "file://src/${GO_IMPORT}/LICENSE.md;md5=f30fb6c072a73bf2916ac
 
 GO_IMPORT = "github.com/cryptera-device-security/libpkcs11ks"
 
-# Remove this when dropping scarthgap support.
-GO_SRCURI_DESTSUFFIX ??= "${@os.path.join(os.path.basename(d.getVar('S')), 'src', d.getVar('GO_IMPORT')) + '/'}"
-
 SRC_URI = "git://${GO_IMPORT};name=ks;protocol=https;branch=main;destsuffix=${GO_SRCURI_DESTSUFFIX}"
 SRCREV_ks        = "950de36387690f1d3d5373c9ee70f07e8c12a692"
 
