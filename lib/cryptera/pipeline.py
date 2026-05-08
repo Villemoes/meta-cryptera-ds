@@ -99,7 +99,7 @@ def collect_key_usage(cpdir, tasks):
     task_keys = {}
 
     pndir = os.path.join(cpdir, "pn")
-    for fn in glob.glob(os.path.join(pndir, "*.json")):
+    for fn in glob.glob(f"{pndir}/**/*.json", recursive=True):
         with open(fn) as f:
             pntk = json.load(f)
         for t in pntk:
@@ -329,6 +329,14 @@ def emit_key_usage(evt, d):
     tasks = (d.getVar("CRYPTERA_SIGNING_TASKS") or "").split()
     count = int(d.getVar("CRYPTERA_KEY_USAGE_COUNT") or "1")
     pn = d.getVar("PN")
+    mc = d.getVar("BB_CURRENT_MC")
+
+    pndir = os.path.join(cpdir, "pn")
+    if mc:
+        pndir = os.path.join(pndir, mc)
+        mcprefix = f"mc:{mc}:"
+    else:
+        mcprefix = ""
 
     # Mapping of $pn.$task -> { keyid -> usage count }
     task_keys = {}
@@ -342,13 +350,20 @@ def emit_key_usage(evt, d):
             else:
                 tk[kid] += count
         if len(tk):
-            task_keys[pn + "." + t] = tk
+            task_keys[f"{mcprefix}{pn}.{t}"] = tk
 
-    pndir = os.path.join(cpdir, "pn")
     bb.utils.mkdirhier(pndir)
     fn = os.path.join(pndir, pn + ".json")
-    with open(fn, "w") as f:
-        print(json.dumps(task_keys, sort_keys = True, indent = 4), file=f)
+    lockfn = fn + ".lock"
+
+    with bb.utils.fileslocked([lockfn]):
+        if os.path.exists(fn):
+            with open(fn, "r") as f:
+                if json.load(f) != task_keys:
+                    bb.fatal("The [cryptera-keys] flag is not deterministic, this must be fixed.")
+        else:
+            with open(fn, "x") as f:
+                print(json.dumps(task_keys, sort_keys = True, indent = 4), file=f)
 
 # wait_for_approval(d, timeout, interval): Wait for the pipeline to be
 # approved. Guaranteed to succeed if the setup routine determined that
