@@ -31,7 +31,7 @@ CRYPTERA_KEYSERVER     ??= "https://keyserver.${CRYPTERA_SERVER_BASE}${CRYPTERA_
 # The base directory where metadata related to the signing pipeline is
 # stored. This directory is completely removed at the beginning of
 # every build.
-CRYPTERA_PIPELINE_DIR ??= "${TMPDIR}/cryptera"
+CRYPTERA_PIPELINE_DIR ??= "${TOPDIR}/cryptera"
 
 # The pipeline setup will end up emitting two files with the
 # information needed by the signing step, one for sourcing from a
