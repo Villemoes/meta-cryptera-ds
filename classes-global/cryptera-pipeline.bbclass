@@ -62,7 +62,7 @@ python cryptera_setup_pipeline() {
 }
 
 addhandler cryptera_shutdown_pipeline
-cryptera_shutdown_pipeline[eventmask] = "bb.event.BuildCompleted"
+cryptera_shutdown_pipeline[eventmask] = "bb.cooker.CookerExit"
 python cryptera_shutdown_pipeline() {
     cryptera.pipeline.shutdown(e, d)
 }

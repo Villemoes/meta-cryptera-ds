@@ -382,13 +382,22 @@ def wait_for_approval(d, timeout=None, interval=None):
     bb.fatal("Pipeline not approved within %d seconds" % timeout)
 
 def shutdown(evt, d):
-    assert isinstance(evt, bb.event.BuildCompleted)
+    assert isinstance(evt, bb.cooker.CookerExit)
 
-    with open(d.getVar("CRYPTERA_PIPELINE_ENV_JSON")) as f:
-        env = json.load(f)
+    # Note: Any errors encountered in a CookerExit event hook will not
+    # be seen in the console, as that part of bitbake is already shut
+    # down. The output only goes to the bitbake-cookerdaemon.log file
+    # in ${TOPDIR}. Also, any exception thrown will not affect
+    # bitbake's exit status.
+    try:
+        with open(d.getVar("CRYPTERA_PIPELINE_ENV_JSON")) as f:
+            env = json.load(f)
+    except FileNotFoundError:
+        env = {}
 
     if "KSC_OPERATION_ID" not in env:
         # No pipeline created.
+        bb.note("No pipeline operation to cancel")
         return
 
     details = get_details(d)
@@ -402,6 +411,7 @@ def shutdown(evt, d):
 
     resp = request('DELETE', url, id_token)
     if resp.status_code == 200:
+        bb.note(f"Cancelled pipeline operation {operation_id}")
         details = get_details(d, expected_status = [200, 410])
         write_details_file(d, "cancelled", details)
     else:
