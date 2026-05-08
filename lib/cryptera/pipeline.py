@@ -122,12 +122,33 @@ def collect_key_usage(cpdir, tasks):
 @private_umask
 def prepare(evt, d):
     cpdir = d.getVar("CRYPTERA_PIPELINE_DIR")
+    dt = d.getVar("DATETIME")
+    dtfile = os.path.join(cpdir, "datetime")
+    lf = cpdir + ".lock"
 
     assert isinstance(evt, bb.event.ParseStarted)
 
-    bb.note("Wiping directory '%s'" % cpdir)
-    bb.utils.remove(cpdir, True)
-    bb.utils.mkdirhier(cpdir)
+    with bb.utils.fileslocked([lf]):
+        if os.path.isdir(cpdir):
+            # Let's ensure that this is a leftover from a previous
+            # build: There must be a 'datetime' file, and it must
+            # contain a different value than the current
+            # ${DATETIME}. The ParseStarted event should only fire
+            # once, so if we get it multiple times, something is odd
+            # and needs fixing.
+            try:
+                with open(dtfile) as f:
+                    olddt = f.read().strip()
+            except FileNotFoundError:
+                bb.fatal(f"Directory '{cpdir}' exists but is not a metadata directory from a previous build!")
+            if olddt == dt:
+                bb.fatal(f"Directory '{cpdir}' already contains a 'datetime' file with the value {dt}, multiple bb.event.ParseStarted events?!?")
+            bb.note(f"Wiping directory '{cpdir}'")
+            bb.utils.remove(cpdir, recurse=True)
+
+        bb.utils.mkdirhier(cpdir)
+        with open(dtfile, "x") as f:
+            print(dt, file=f)
 
 # setup(evt, d): Called from global context, after all
 # recipes have been parsed and all dependencies worked out.
