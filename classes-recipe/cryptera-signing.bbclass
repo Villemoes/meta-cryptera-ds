@@ -12,7 +12,7 @@ DEPENDS += "cryptera-libpkcs11ks-native"
 DEPENDS += "openssl-native"
 DEPENDS += "ca-certificates-native"
 
-CRYPTERA_OPENSSL_CONF = "${STAGING_ETCDIR_NATIVE}/cryptera/engine.conf"
+CRYPTERA_OPENSSL_CONF = "${STAGING_ETCDIR_NATIVE}/cryptera/openssl.conf"
 
 python() {
     # The setup/request of a pipeline requires that the

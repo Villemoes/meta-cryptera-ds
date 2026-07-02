@@ -20,7 +20,7 @@ SRCREV_pkcs11    = "f3481918a208bd212aa995a41f92d786eb418a7d"
 SRC_URI += "git://go.googlesource.com/crypto;name=crypto;protocol=https;nobranch=1;destsuffix=vendor/src/golang.org/x/crypto"
 SRCREV_crypto    = "03ca0dcccbd37ba6be80adf74dde8d78a4d72817"
 
-SRC_URI += "file://engine.conf"
+SRC_URI += "file://openssl.conf"
 
 SRCREV_FORMAT = "ks_pkcs11mod_pkcs11_crypto"
 
@@ -28,7 +28,8 @@ inherit go
 
 export GO111MODULE = "off"
 
-PKCS11_MODULE_PATH = "${libdir}/engines-3/pkcs11.so"
+PKCS11_ENGINE_PATH = "${libdir}/engines-3/pkcs11.so"
+PKCS11_PROVIDER_PATH = "${libdir}/ossl-modules/pkcs11prov.so"
 CRYPTERA_PKCS11_MODULE_PATH = "${libdir}/pkcs11/libpkcs11keyserver.so"
 
 do_compile() {
@@ -61,11 +62,12 @@ do_install:append() {
     install -d "${D}${libdir}/pkcs11"
     install -m 0755 libpkcs11keyserver.so "${D}${libdir}/pkcs11"
     install -d ${D}${sysconfdir}/cryptera
-    install -m 0644 ${UNPACKDIR}/engine.conf ${D}${sysconfdir}/cryptera/
+    install -m 0644 ${UNPACKDIR}/openssl.conf ${D}${sysconfdir}/cryptera/
 
-    sed -i -e "s|@@PKCS11_MODULE_PATH@@|${PKCS11_MODULE_PATH}|" \
+    sed -i -e "s|@@PKCS11_ENGINE_PATH@@|${PKCS11_ENGINE_PATH}|" \
+           -e "s|@@PKCS11_PROVIDER_PATH@@|${PKCS11_PROVIDER_PATH}|" \
            -e "s|@@CRYPTERA_PKCS11_MODULE_PATH@@|${CRYPTERA_PKCS11_MODULE_PATH}|" \
-              ${D}${sysconfdir}/cryptera/engine.conf
+              ${D}${sysconfdir}/cryptera/openssl.conf
 }
 
 FILES:${PN} += "${libdir}"
