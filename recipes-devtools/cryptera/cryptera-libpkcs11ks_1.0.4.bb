@@ -29,7 +29,7 @@ inherit go
 export GO111MODULE = "off"
 
 PKCS11_ENGINE_PATH = "${libdir}/engines-3/pkcs11.so"
-PKCS11_PROVIDER_PATH = "${libdir}/ossl-modules/pkcs11prov.so"
+PKCS11_PROVIDER_PATH = "${libdir}/ossl-modules/pkcs11.so"
 CRYPTERA_PKCS11_MODULE_PATH = "${libdir}/pkcs11/libpkcs11keyserver.so"
 
 do_compile() {
@@ -74,6 +74,7 @@ FILES:${PN} += "${libdir}"
 
 RDEPENDS:${PN} += "libp11"
 RDEPENDS:${PN} += "openssl"
+RDEPENDS:${PN} += "pkcs11-provider"
 
 # TODO? Allow building a nativesdk- variant?
 BBCLASSEXTEND = "native"
