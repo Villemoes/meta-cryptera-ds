@@ -56,6 +56,7 @@ python() {
     # fine for this, with that small caveat.]
 
     for t in d.getVar("CRYPTERA_SIGNING_TASKS").split():
+        d.appendVarFlag(t, 'vardeps', ' CRYPTERA_KEY_USAGE_COUNT')
         keys = d.getVarFlag(t, "cryptera-keys") or ""
         if cryptera.pipeline.filter_server_key_ids(keys):
             d.setVarFlag(t, "network", "1")
