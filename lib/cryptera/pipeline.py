@@ -142,7 +142,8 @@ def prepare(evt, d):
             except FileNotFoundError:
                 bb.fatal(f"Directory '{cpdir}' exists but is not a metadata directory from a previous build!")
             if olddt == dt:
-                bb.fatal(f"Directory '{cpdir}' already contains a 'datetime' file with the value {dt}, multiple bb.event.ParseStarted events?!?")
+                bb.note(f"Directory '{cpdir}' already contains a 'datetime' file with contents {dt}, not wiping it")
+                return
             bb.note(f"Wiping directory '{cpdir}'")
             bb.utils.remove(cpdir, recurse=True)
 
